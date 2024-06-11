@@ -65,40 +65,52 @@ app.post("/login", async (req, res) => {
   res.status(200).json({ user });
 });
 
-
 app.post("/post", async (req, res) => {
-
-    const post = await Post.create(req.body);
-    res.status(201).json(post);
-
-} );
+  const post = await Post.create(req.body);
+  res.status(201).json(post);
+});
 
 app.get("/posts", async (req, res) => {
-    const posts = await Post.find();
-    res.status(200).send(posts);
-} );
+  const posts = await Post.find();
+  res.status(200).send(posts);
+});
 
-// delete post from posts list wenn der benutzer ein admin role hat. 
-app.delete('/deletepost/:id',auth,async(req,res)=>{
-  
-    const user  = await User.findById(req.user.id)
-    if(!user){
-        return res.status(400).json({message:"Benutzer existiert nicht"})
-    }
-  
-    if(user.role !== "admin"){
-        return res.status(400).json({message:"Benutzer ist kein Admin"})
-    }
-     // ein post löschen 
-    const post = await Post.findByIdAndDelete(req.params.id)
+// delete post from posts list wenn der benutzer ein admin role hat.
+app.delete("/deletepost/:id", auth, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(400).json({ message: "Benutzer existiert nicht" });
+  }
 
-    res.status(201).json("post removed")
+  if (user.role !== "admin") {
+    return res.status(400).json({ message: "Benutzer ist kein Admin" });
+  }
+  // ein post löschen
+  const post = await Post.findByIdAndDelete(req.params.id);
+
+  res.status(201).json("post removed");
+});
+
+app.delete("/deleteownpost", auth, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return res.status(400).json({ message: "Benutzer existiert nicht" });
+  }
+
+  if (user.role !== "editor") {
+    return res.status(400).json({ message: "Admin darf nicht löschen" });
+  }
+
+
+const post = await Post.findByIdAndDelete(req.body.id);
     
-})
+      res.json (post.owner, user._id)
 
 
 
 
+
+});
 
 app.get("/users", async (req, res) => {
   const users = await User.find();
