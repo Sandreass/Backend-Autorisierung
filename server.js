@@ -91,26 +91,32 @@ app.delete("/deletepost/:id", auth, async (req, res) => {
   res.status(201).json("post removed");
 });
 
-app.delete("/deleteownpost", auth, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  if (!user) {
-    return res.status(400).json({ message: "Benutzer existiert nicht" });
-  }
+// delete only own post from posts 
+app.delete('/deleteownpost/:id',auth,async (req,res)=>{
 
-  if (user.role !== "editor") {
-    return res.status(400).json({ message: "Admin darf nicht löschen" });
-  }
-
-
-const post = await Post.findByIdAndDelete(req.body.id);
+    const user = await User.findById(req.user.id)
     
-      res.json (post.owner, user._id)
+    if(!user){
+        return res.status(400).json({message:"Benutzer existiert nicht"})
+    }
 
+    // check if der benutzer hat editor role 
+    if(user.role !== "editor"){
+        return res.status(400).json({message:"Benutzer ist kein Editor"})
+    }
+    
+    // check if der benutzer delete sein eigene post
+    const post = await Post.findById(req.params.id);
 
+       if(post.owner.toString() !== user._id.toString()){
+        return res.status(400).json({message:"Benutzer ist kein Eigentümer"})
+       }
 
+       // ein post löschen
+       await Post.findByIdAndDelete(req.params.id)
 
-
-});
+       res.status(201).json("Eigene post removed")
+})
 
 app.get("/users", async (req, res) => {
   const users = await User.find();
